@@ -12,9 +12,9 @@ services:
       - key: LOG_LEVEL
         value: INFO
       - key: API_KEY
-        generateValue: true
+        value: snmflix-secret-production-key-2026
       - key: CORS_ORIGINS
-        value: https://snmflix.vercel.app
+        value: "*"
       - key: MAX_CONCURRENT_EXTRACTIONS
         value: 5
       - key: EXTRACTION_TIMEOUT_SECONDS

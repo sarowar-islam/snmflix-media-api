@@ -27,6 +27,8 @@ class Settings(BaseSettings):
 
     # CORS
     CORS_ORIGINS: Union[str, List[str]] = [
+        "*",
+        "https://watch.melopee.app",
         "https://snmflix.vercel.app",
         "http://localhost:3000",
         "http://localhost:5173",
