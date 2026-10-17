@@ -545,54 +545,77 @@ When consuming extracted stream URLs in the SNMflix frontend, be aware of standa
 
 ---
 
-## Deploying to Render
+## Running with Docker Locally
 
-This service is pre-configured for **Render Web Services** via the included `render.yaml`.
+You can build and run the application locally using Docker:
+
+### 1. Build the Docker Image
+```bash
+docker build -t snmflix-media-api .
+```
+
+### 2. Run the Container
+```bash
+docker run -d \
+  --name snmflix-media-api \
+  -p 8000:8000 \
+  -e ENVIRONMENT=development \
+  -e API_KEY=your-secret-api-key-here \
+  -e CORS_ORIGINS=https://snmflix.vercel.app,http://localhost:3000 \
+  snmflix-media-api
+```
+
+### 3. Verify Container Status & Logs
+```bash
+docker ps
+docker logs -f snmflix-media-api
+curl -X GET http://localhost:8000/health
+```
+
+---
+
+## Deploying to Render with Docker
+
+This service is pre-configured for **Render Web Services** via Docker and the included `render.yaml`.
 
 ### Method A: Deploy with Blueprint (Recommended)
 
-1. Push this repository to GitHub:
-   ```bash
-   git add .
-   git commit -m "Initial commit of SNMflix Media Extraction API"
-   git remote add origin git@github.com:your-user/snmflix-media-api.git
-   git push -u origin main
-   ```
+1. Push your repository to GitHub.
 2. Log in to the [Render Dashboard](https://dashboard.render.com/).
 3. Click **New +** and select **Blueprint**.
 4. Connect your GitHub repository.
-5. Render will automatically detect `render.yaml` and configure:
-   - **Environment**: Python
-   - **Build Command**: `pip install --upgrade pip && pip install -r requirements.txt`
-   - **Start Command**: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+5. Render will detect `render.yaml` and configure:
+   - **Environment**: `Docker`
+   - **Dockerfile Path**: `./Dockerfile`
+   - **Docker Context**: `.`
    - **Health Check Path**: `/health`
-6. Render will generate an `API_KEY` for you (or you can specify your own in the dashboard).
+6. Render will auto-generate an `API_KEY` for you (or you can override it in the dashboard).
 7. Click **Apply**.
 
-### Method B: Manual Web Service Setup
+### Method B: Manual Docker Web Service Setup
 
 If setting up without a Blueprint:
 1. Click **New +** -> **Web Service**.
 2. Connect your repository.
-3. Fill in the service settings:
+3. Select **Docker** as the Runtime.
+4. Fill in the service settings:
    - **Name**: `snmflix-media-api`
-   - **Language**: `Python`
-   - **Build Command**: `pip install --upgrade pip && pip install -r requirements.txt`
-   - **Start Command**: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
-4. Under **Advanced**:
+   - **Region**: (Choose your preferred region)
+   - **Dockerfile Path**: `./Dockerfile`
+   - **Docker Context**: `.`
+5. Under **Advanced**:
    - **Health Check Path**: `/health`
-5. Under **Environment Variables**, add:
-   - `PYTHON_VERSION`: `3.12.3`
+6. Under **Environment Variables**, add:
    - `ENVIRONMENT`: `production`
    - `API_KEY`: `your-secure-random-token`
    - `CORS_ORIGINS`: `https://snmflix.vercel.app`
    - `MAX_CONCURRENT_EXTRACTIONS`: `5`
    - `EXTRACTION_TIMEOUT_SECONDS`: `20`
    - `RATE_LIMIT_PER_MINUTE`: `60`
-6. Click **Deploy Web Service**.
+7. Click **Deploy Web Service**. Render will build the Docker container and route traffic dynamically to the container via `$PORT`.
 
 ### Note Regarding FFmpeg
-Simple metadata extraction and direct stream URL discovery with `yt-dlp` **do not require FFmpeg**. yt-dlp only requires FFmpeg when merging separate audio and video files onto the local server disk or performing format conversions. Because this API is purely an extraction service that does not store or process media files, FFmpeg is omitted, keeping the deployment lightweight, fast, and within Render's standard Python runtime.
+Simple metadata extraction and direct stream URL discovery with `yt-dlp` **do not require FFmpeg**. yt-dlp only requires FFmpeg when merging separate audio and video files onto the local server disk or performing format conversions. Because this API is purely an extraction service that does not store or process media files, FFmpeg is omitted, keeping the Docker image minimal, fast to build, and secure.
 
 ---
 
